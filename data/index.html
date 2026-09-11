@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sensy Wall - Diagnóstico y Calibración</title>
+  <link href="style.css" rel="stylesheet" type="text/css" />
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Sensy Wall</h1>
+    <div class="subtitle">Diagnóstico y Calibración de Matrices LED</div>
+    
+    <!-- Monitor de Corriente y Voltaje en Tiempo Real -->
+    <div class="card sensor-card">
+      <div class="card-label">Consumo Eléctrico Actual (INA260)</div>
+      <div class="val-ma" id="ma_val">-- mA</div>
+      <div class="val-v" id="v_val">-- V</div>
+    </div>
+
+    <!-- Acciones Principales: Calibrar y Autodiagnóstico -->
+    <div class="card action-card">
+      <div class="card-label" style="margin-bottom: 12px;">Acciones del Sistema</div>
+      <div class="btn-grid">
+        <button class="btn-action btn-calib" id="btn_calib" onclick="startCalibration()">
+          ⚙️ Calibrar
+        </button>
+        <button class="btn-action btn-diag" id="btn_diag" onclick="startAutodiag()">
+          🔬 Autodiagnóstico
+        </button>
+      </div>
+      <div class="status-box" id="status_msg"></div>
+    </div>
+
+    <!-- Resultados de Calibración -->
+    <div class="card calib-card" id="calib_card" style="display: none;">
+      <div class="section-title">Valores de Calibración Guardados</div>
+      <div class="section-desc">Umbrales almacenados en <code>coleccion_matriz_led</code></div>
+      <div id="calib_list"></div>
+      <div class="json-link-container">
+        <a href="/calibration.json" target="_blank" class="json-link">📄 Ver /calibration.json</a>
+      </div>
+    </div>
+
+    <!-- Resultados del Autodiagnóstico -->
+    <div class="card diag-card" id="diag_card" style="display: none;">
+      <div class="section-title">Resultados de Autodiagnóstico</div>
+      <div id="general_status_banner" class="status-banner"></div>
+      <div id="diag_list"></div>
+      <div class="json-link-container">
+        <a href="/diagnostics.json" target="_blank" class="json-link">📄 Ver /diagnostics.json generado</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

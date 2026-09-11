@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "../../../../Arduino/libraries/SPSensyWall"
+		},
+		{
+			"name": "AppAutodiagnostico",
+			"path": ".."
+		}
+	],
+	"settings": {}
+}

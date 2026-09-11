@@ -1,0 +1,205 @@
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+body { background-color: #121212; color: #e0e0e0; display: flex; justify-content: center; padding: 20px; min-height: 100vh; }
+.container { max-width: 520px; width: 100%; display: flex; flex-direction: column; gap: 14px; }
+
+h1 { text-align: center; font-size: 24px; color: #ffffff; margin-bottom: 2px; }
+.subtitle { text-align: center; font-size: 14px; color: #90caf9; margin-bottom: 6px; }
+
+.card { background: #1e1e1e; border-radius: 12px; padding: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); text-align: center; }
+.card-label { font-size: 14px; font-weight: 600; color: #b0bec5; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Tarjetas temáticas */
+.sensor-card { border: 1px solid #2e7d32; }
+.action-card { border: 1px solid #37474f; }
+.calib-card { border: 1px solid #0288d1; text-align: left; }
+.diag-card { border: 1px solid #7b1fa2; background: #1b1622; text-align: left; }
+
+.val-ma { font-size: 40px; font-weight: bold; color: #00e676; margin: 6px 0; }
+.val-v { font-size: 17px; color: #b0bec5; }
+
+/* Grid de los 2 botones */
+.btn-grid {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+button {
+  flex: 1;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-calib {
+  background: linear-gradient(135deg, #0288d1, #00838f);
+  box-shadow: 0 4px 12px rgba(2, 136, 209, 0.35);
+}
+.btn-calib:not(:disabled):active { transform: scale(0.97); }
+
+.btn-diag {
+  background: linear-gradient(135deg, #8e24aa, #5e35b1);
+  box-shadow: 0 4px 12px rgba(142, 36, 170, 0.4);
+}
+.btn-diag:not(:disabled):active { transform: scale(0.97); }
+
+/* Cuadro de estado */
+.status-box {
+  display: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
+.status-loading {
+  background-color: #261e30;
+  color: #e1bee7;
+  border: 1px solid #8e24aa;
+}
+.status-success {
+  background-color: #1b2e1e;
+  color: #a5d6a7;
+  border: 1px solid #2e7d32;
+}
+.status-error {
+  background-color: #381919;
+  color: #ef9a9a;
+  border: 1px solid #d32f2f;
+}
+
+/* Secciones y títulos interiores */
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+.section-desc {
+  font-size: 13px;
+  color: #90a4ae;
+  margin-bottom: 12px;
+}
+.info-subnote {
+  font-size: 13px;
+  color: #81c784;
+  background: #152417;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border-left: 3px solid #4caf50;
+}
+
+/* Elementos de diagnóstico y calibración */
+.diag-card-item {
+  background-color: #211c27;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+  border: 1px solid #373242;
+  transition: all 0.2s ease;
+}
+.item-ok { border-left: 4px solid #00e676; }
+.item-fail { border-left: 4px solid #f44336; }
+
+.diag-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.comp-title {
+  font-weight: bold;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.badge-ok { background-color: #1b5e20; color: #a5d6a7; border: 1px solid #2e7d32; }
+.badge-warn { background-color: #e65100; color: #ffe0b2; border: 1px solid #ff9800; }
+.badge-danger { background-color: #b71c1c; color: #ffcdd2; border: 1px solid #e53935; }
+.badge-unknown { background-color: #37474f; color: #cfd8dc; border: 1px solid #78909c; }
+
+.diag-metrics {
+  font-size: 13px;
+  color: #cfd8dc;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.val-highlight {
+  color: #00e676;
+  font-weight: bold;
+}
+
+.err-description {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #3f364e;
+  font-size: 12px;
+  color: #e0e0e0;
+  line-height: 1.4;
+}
+
+/* Banner de estado general */
+.status-banner {
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.banner-ok {
+  background-color: #1b3820;
+  border: 1px solid #43a047;
+  color: #c8e6c9;
+}
+.banner-fail {
+  background-color: #3b1c1c;
+  border: 1px solid #e53935;
+  color: #ffcdd2;
+}
+
+/* Enlaces a los JSON generados */
+.json-link-container {
+  margin-top: 14px;
+  text-align: center;
+}
+.json-link {
+  display: inline-block;
+  font-size: 13px;
+  color: #90caf9;
+  text-decoration: none;
+  background-color: #162432;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #1e88e5;
+  transition: all 0.2s ease;
+}
+.json-link:hover {
+  background-color: #1976d2;
+  color: #ffffff;
+}
