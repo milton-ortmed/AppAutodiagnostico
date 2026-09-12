@@ -44,8 +44,8 @@ uint32_t ina_conversion_start = 0;
 const uint32_t INA_CONVERSION_TIMEOUT_MS = 3000;
 
 // Credenciales de la red Wi-Fi local (Modo Station)
-const char *ssid = "INFINITUM1FBB_2.4";
-const char *password = "h2ebXbfCpn";
+const char *ssid = "TU_SSID_AQUI";
+const char *password = "TU_PASSWORD_AQUI";
 // Dirección web: http://sensywall.local/
 
 
@@ -224,6 +224,84 @@ void sendJsonData() {
   server.send(200, "application/json", json);
 }
 
+void generarRespuestaCalibracionSensyWall() {
+  //Crear documento JSON con la calibración
+  JsonDocument calDoc;
+  calDoc["device_id"] = "SensyWall";
+  calDoc["passive_mA"] = passiveReading.mA;
+  calDoc["voltage_V"] = passiveReading.mV / 1000.0f; // Convertir a voltios
+  JsonArray mats = calDoc["components"].to<JsonArray>();
+  for (uint8_t i = 0; i < NUM_MATRICES; i++) {
+    JsonObject m = mats.add<JsonObject>();
+    m["comp_id"] = coleccion_matriz_led[i].comp_id;
+    m["type"] = "matriz_LED";
+
+    JsonObject connection = m["connection"].to<JsonObject>();
+    connection["bus"] = "I2C";
+    connection["addr"] = String("0x") + String(coleccion_matriz_led[i].IS31_ADDR, HEX);
+
+    JsonObject calibration = m["calibration"].to<JsonObject>();
+    calibration["nominal_mA"] = diag_result[i];
+    calibration["min_mA"] = coleccion_matriz_led[i].min_mA;
+    calibration["max_mA"] = coleccion_matriz_led[i].max_mA;
+  }
+
+  // Guardar archivo /calibration.json en LittleFS para persistencia
+  File calFile = LittleFS.open("/calibration.json", "w");
+  if (calFile) {
+    serializeJsonPretty(calDoc, calFile);
+    calFile.close();
+    Serial.println("✅ Archivo /calibration.json guardado en LittleFS.");
+  }
+}
+
+void handleCalibrationSensyWall() {
+  sendMeasurementStartAck();
+  shutdownWifiForMeasurement();
+
+  Serial.println("⚙️ Iniciando proceso de calibración de matrices LED sin Wi-Fi activo...");
+
+  // 1. Apagar todos los LEDs de todas las matrices
+  for (uint8_t i = 0; i < NUM_MATRICES; i++) {
+    fillColor(coleccion_matriz_led[i].IS31_ADDR, 0, 0, 0);
+  }
+  delay(100);
+  passiveReading = readInaTriggered();
+  Serial.print("Consumo pasivo medido: ");
+  Serial.print(passiveReading.mA);
+  Serial.println(" mA");
+
+  // 2. Probar secuencialmente cada matriz a brillo máximo blanco
+  for (uint8_t i = 0; i < NUM_MATRICES; i++) {
+    fillColor(coleccion_matriz_led[i].IS31_ADDR, 255, 255, 255);
+    delay(100); // Breve estabilización eléctrica
+    InaReading r = readInaTriggered();
+    diag_result[i] = r.mA;
+
+    // Guardar valores calibrados en el arreglo coleccion_matriz_led
+    coleccion_matriz_led[i].min_mA = r.mA - coleccion_matriz_led[i].tolerance_mA;
+    coleccion_matriz_led[i].max_mA = r.mA + coleccion_matriz_led[i].tolerance_mA;
+
+    Serial.print("Calibrada ");
+    Serial.print(coleccion_matriz_led[i].comp_id);
+    Serial.print(": nominal=");
+    Serial.print(r.mA);
+    Serial.print(" mA, rango=[");
+    Serial.print(coleccion_matriz_led[i].min_mA);
+    Serial.print(" - ");
+    Serial.print(coleccion_matriz_led[i].max_mA);
+    Serial.println("] mA");
+
+    fillColor(coleccion_matriz_led[i].IS31_ADDR, 0, 0, 0);
+    delay(50);
+  }
+
+  has_diag_result = true;
+
+  generarRespuestaCalibracionSensyWall();
+  reconnectWifiForServer();
+}
+
 // Genera el informe de diagnóstico, guarda el archivo JSON en LittleFS y responde al cliente
 void generarRespuestaDiagnosticoSensyWall() {
   // 1. Instanciamos el documento JSON
@@ -312,81 +390,6 @@ void generarRespuestaDiagnosticoSensyWall() {
   Serial.println("JSON de Diagnóstico Generado:");
   Serial.println(response);
   server.send(200, "application/json", response);
-}
-
-void handleCalibrationSensyWall() {
-  sendMeasurementStartAck();
-  shutdownWifiForMeasurement();
-
-  Serial.println("⚙️ Iniciando proceso de calibración de matrices LED sin Wi-Fi activo...");
-
-  // 1. Apagar todos los LEDs de todas las matrices
-  for (uint8_t i = 0; i < NUM_MATRICES; i++) {
-    fillColor(coleccion_matriz_led[i].IS31_ADDR, 0, 0, 0);
-  }
-  delay(100);
-  passiveReading = readInaTriggered();
-  Serial.print("Consumo pasivo medido: ");
-  Serial.print(passiveReading.mA);
-  Serial.println(" mA");
-
-  // 2. Probar secuencialmente cada matriz a brillo máximo blanco
-  for (uint8_t i = 0; i < NUM_MATRICES; i++) {
-    fillColor(coleccion_matriz_led[i].IS31_ADDR, 255, 255, 255);
-    delay(100); // Breve estabilización eléctrica
-    InaReading r = readInaTriggered();
-    diag_result[i] = r.mA;
-
-    // Guardar valores calibrados en el arreglo coleccion_matriz_led
-    coleccion_matriz_led[i].min_mA = r.mA - coleccion_matriz_led[i].tolerance_mA;
-    coleccion_matriz_led[i].max_mA = r.mA + coleccion_matriz_led[i].tolerance_mA;
-
-    Serial.print("Calibrada ");
-    Serial.print(coleccion_matriz_led[i].comp_id);
-    Serial.print(": nominal=");
-    Serial.print(r.mA);
-    Serial.print(" mA, rango=[");
-    Serial.print(coleccion_matriz_led[i].min_mA);
-    Serial.print(" - ");
-    Serial.print(coleccion_matriz_led[i].max_mA);
-    Serial.println("] mA");
-
-    fillColor(coleccion_matriz_led[i].IS31_ADDR, 0, 0, 0);
-    delay(50);
-  }
-
-  has_diag_result = true;
-
-  // 3. Crear documento JSON con la calibración
-  JsonDocument calDoc;
-  calDoc["device_id"] = "SensyWall";
-  calDoc["passive_mA"] = passiveReading.mA;
-  calDoc["voltage_V"] = passiveReading.mV / 1000.0f; // Convertir a voltios
-  JsonArray mats = calDoc["components"].to<JsonArray>();
-  for (uint8_t i = 0; i < NUM_MATRICES; i++) {
-    JsonObject m = mats.add<JsonObject>();
-    m["comp_id"] = coleccion_matriz_led[i].comp_id;
-    m["type"] = "matriz_LED";
-
-    JsonObject connection = m["connection"].to<JsonObject>();
-    connection["bus"] = "I2C";
-    connection["addr"] = String("0x") + String(coleccion_matriz_led[i].IS31_ADDR, HEX);
-
-    JsonObject calibration = m["calibration"].to<JsonObject>();
-    calibration["nominal_mA"] = diag_result[i];
-    calibration["min_mA"] = coleccion_matriz_led[i].min_mA;
-    calibration["max_mA"] = coleccion_matriz_led[i].max_mA;
-  }
-
-  // 4. Guardar archivo /calibration.json en LittleFS para persistencia
-  File calFile = LittleFS.open("/calibration.json", "w");
-  if (calFile) {
-    serializeJsonPretty(calDoc, calFile);
-    calFile.close();
-    Serial.println("✅ Archivo /calibration.json guardado en LittleFS.");
-  }
-
-  reconnectWifiForServer();
 }
 
 /**
